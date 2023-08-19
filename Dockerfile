@@ -30,7 +30,8 @@ gid=1000
 
 RUN \
  groupadd --gid ${gid} ${gname} && \ 
- useradd --home-dir /home/${uname} -g ${gname} --shell /bin/bash --create-home --uid ${uid} ${uname}
+ useradd --home-dir /home/${uname} -g ${gname} --shell /bin/bash --create-home --uid ${uid} ${uname} && \
+ chown -R ${uid}:${gid} /app
 
 HEALTHCHECK --interval=1m --timeout=3s \
   CMD /app/healthcheck.sh
