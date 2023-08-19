@@ -47,7 +47,7 @@ if [ ${uid} -ne ${PUID} ]; then
 fi
 usermod -aG ${PGID} ${PUID}
 
-chownCmd="chown -R ${PGID}:${PUID} /app"
+chownCmd="chown -R ${PUID}:${PGID} /app"
 echo $chownCmd
 `$chownCmd`
 
