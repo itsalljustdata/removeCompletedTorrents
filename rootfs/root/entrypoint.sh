@@ -13,6 +13,7 @@ gid=`id -g ${runGroup}`
 
 # Set GroupId
 if [ ${gid} -ne ${PGID} ]; then
+    echo "${runGroup} : existing GID is different to PGID (${PGID})"
     tmp=`grep ":${PGID}:" /etc/group | cut -d: -f 1`
     if [ "$tmp" == "" ]; then
         echo "${runGroup} : Changing GID from ${gid} to ${PGID}"
@@ -25,6 +26,7 @@ fi
 
 # Set UserId
 if [ ${uid} -ne ${PUID} ]; then
+    echo "${runUser} : existing UID is different to PUID (${PUID})"
     tmp=`id -nu $PUID 2> /dev/null`
     if [ "${tmp}" == "" ]; then
         echo "${runUser} : Changing UID from ${uid} to ${PUID}"
@@ -41,11 +43,13 @@ if [ ${uid} -ne ${PUID} ]; then
         
         passwdEntry=`grep "^${runUser}:" /etc/passwd`
         mkdir -p `echo $passwdEntry | cut -d: -f 6` 2> /dev/null
-        usermod -aG $PGID ${runUser}
     fi
 fi
+usermod -aG ${PGID} ${PUID}
 
-chown -R ${runUser}:${runGroup} /app
+chownCmd="chown -R ${PGID}:${PUID} /app"
+echo $chownCmd
+`$chownCmd`
 
 echo "Spawning removeCompletedTorrents as user \"${runUser}\", group \"${runGroup}\""
 
