@@ -1,0 +1,119 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# GitHub recommends pinning actions to a commit SHA.
+# To get a newer version, you will need to update the SHA.
+# You can also reference a tag or branch, but the action may change without warning.
+
+name: Publish Docker image
+
+on:
+  release:
+    types: [published]
+
+env:
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: ghcr.io
+  REGISTRY_DOCKER: docker.io
+
+jobs:
+  push_to_registry:
+
+    name: Build and push Docker image to Registry
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      # This is used to complete the identity challenge
+      # with sigstore/fulcio when running outside of PRs.
+      id-token: write
+
+    steps:
+
+      - name: Ensure that the image name is suitable for a docker image name
+        id: image_name_lcase
+        uses: ASzc/change-string-case-action@v5
+        with:
+          string: ${{ github.repository }}
+      - name: assign back to env
+        run: |
+           echo IMAGE_NAME_LCASE=${{ steps.image_name_lcase.outputs.lowercase }} >> $GITHUB_ENV
+           echo TEST_TAG=${{ env.REGISTRY }}/${{ steps.image_name_lcase.outputs.lowercase }}:test >> $GITHUB_ENV
+
+      - name: Check out the repo
+        uses: actions/checkout@v3.5.2
+
+      # Install the cosign tool except on PR
+      # https://github.com/sigstore/cosign-installer
+      - name: Install cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@v3.1.1
+
+      - name: Check cosign Install
+        run: cosign version
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2.5.0
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+        with:
+          registry: ${{ env.REGISTRY_DOCKER }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4.4.0
+        with:
+          images: |
+            ${{ env.REGISTRY_DOCKER }}/${{ env.IMAGE_NAME_LCASE }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LCASE }}
+
+      - name: Build for test
+        id: build-for-test
+        uses: docker/build-push-action@v4
+        with:
+            load: true
+            tags: ${{ env.TEST_TAG }}
+            labels: ${{ steps.meta.outputs.labels }}
+            cache-from: type=gha
+            cache-to: type=gha,mode=max
+
+      - name: Test Image
+        run: |
+           containerName=${{ github.repository_owner }}
+           docker run --name ${containerName} -d ${{ env.TEST_TAG }}
+           sleep 5
+           docker logs -t ${containerName}
+           docker rm -f ${containerName}
+
+      - name: Build and Push
+        id: build-and-push
+        uses: docker/build-push-action@v4
+        with:
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=${{ github.ref }}
+
+          
+      - name: Sign the images with GitHub OIDC Token
+        env:
+            TAGS: ${{ steps.meta.outputs.tags }}
+            DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: |
+           echo "$TAGS"
+           cosign sign -y ${TAGS}@${DIGEST}
