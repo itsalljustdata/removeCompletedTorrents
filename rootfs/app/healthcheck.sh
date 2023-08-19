@@ -1,7 +1,9 @@
-#!/bin/sh
+#!/usr/bin/bash
 
-if [ "`pgrep -f removeCompletedTorrents.py`" == "" ]; then
-    echo "removeCompletedTorrents.py - Not running"
+PUID=${PUID:-1000}
+
+if [ "`pgrep --uid ${PUID} -f removeCompletedTorrents`" == "" ]; then
+    echo "removeCompletedTorrents - Not running"
     exit 1
 fi
 exit 0

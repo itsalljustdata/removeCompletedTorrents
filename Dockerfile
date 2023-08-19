@@ -15,7 +15,7 @@ FROM base as final
 ARG BASE_IMAGE
 
 RUN apt update \
-    && apt install curl wget iputils-ping iproute2 -y \
+    && apt install curl wget iputils-ping iproute2 procps -y \
     && apt-get clean \
     && apt-get autoclean \
     && apt-get autoremove -y \
