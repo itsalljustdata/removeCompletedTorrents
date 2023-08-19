@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+# set -e
 
 runUser=${__RUN_USER:-iajd}
 runGroup=${__RUN_GROUP:-iajd}
@@ -20,7 +20,6 @@ if [ ${gid} -ne ${PGID} ]; then
     else
         runGroup=$tmp
         echo "GID ${PGID} already exists: running as group \"${runGroup}\""
-        usermod -aG $PGID ${runUser}
     fi
 fi
 
