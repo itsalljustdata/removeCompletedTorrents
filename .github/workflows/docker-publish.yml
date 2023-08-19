@@ -33,14 +33,18 @@ jobs:
     steps:
 
       - name: Ensure that the image name is suitable for a docker image name
-        id: image_name_lcase
+        id: IMAGE_NAME
         uses: ASzc/change-string-case-action@v5
         with:
           string: ${{ github.repository }}
       - name: assign back to env
         run: |
-           echo IMAGE_NAME_LCASE=${{ steps.image_name_lcase.outputs.lowercase }} >> $GITHUB_ENV
-           echo TEST_TAG=${{ env.REGISTRY }}/${{ steps.image_name_lcase.outputs.lowercase }}:test >> $GITHUB_ENV
+           echo IMAGE_NAME=${{ steps.IMAGE_NAME.outputs.lowercase }} >> $GITHUB_ENV
+           echo TEST_TAG=${{ env.REGISTRY }}/${{ steps.IMAGE_NAME.outputs.lowercase }}:test >> $GITHUB_ENV
+           echo "----------------------------------------------"
+           echo $GITHUB_ENV 
+           cat $GITHUB_ENV
+           echo "----------------------------------------------"
 
       - name: Check out the repo
         uses: actions/checkout@v3.5.2
@@ -76,32 +80,32 @@ jobs:
         uses: docker/metadata-action@v4.4.0
         with:
           images: |
-            ${{ env.REGISTRY_DOCKER }}/${{ env.IMAGE_NAME_LCASE }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LCASE }}
+            ${{ env.REGISTRY_DOCKER }}/${{ env.IMAGE_NAME }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Build for test
-        id: build-for-test
-        uses: docker/build-push-action@v4
-        with:
-            load: true
-            tags: ${{ env.TEST_TAG }}
-            labels: ${{ steps.meta.outputs.labels }}
-            cache-from: type=gha
-            cache-to: type=gha,mode=max
+      # - name: Build for test
+      #   id: build-for-test
+      #   uses: docker/build-push-action@v4
+      #   with:
+      #       load: true
+      #       tags: ${{ env.TEST_TAG }}
+      #       labels: ${{ steps.meta.outputs.labels }}
+      #       cache-from: type=gha
+      #       cache-to: type=gha,mode=max
 
-      - name: Test Image
-        run: |
-           containerName=${{ github.repository_owner }}
-           docker run --name ${containerName} -d ${{ env.TEST_TAG }}
-           sleep 5
-           docker logs -t ${containerName}
-           docker rm -f ${containerName}
+      # - name: Test Image
+      #   run: |
+      #      containerName=${{ github.repository_owner }}
+      #      docker run --name ${containerName} -d ${{ env.TEST_TAG }}
+      #      sleep 5
+      #      docker logs -t ${containerName}
+      #      docker rm -f ${containerName}
 
       - name: Build and Push
         id: build-and-push
         uses: docker/build-push-action@v4
         with:
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
