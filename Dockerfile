@@ -9,7 +9,7 @@ WORKDIR /install
 
 COPY requirements.txt /requirements.txt
 
-RUN pip install --prefix=/install -r /requirements.txt
+RUN pip install --disable-pip-version-check --prefix=/install --requirement /requirements.txt --compile
 
 FROM base as final
 ARG BASE_IMAGE
