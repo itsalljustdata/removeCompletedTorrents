@@ -55,7 +55,7 @@ jobs:
 
       - name: Docker Image Update Checker
         id: baseupdatecheck
-        uses: lucacome/docker-image-update-checker
+        uses: lucacome/docker-image-update-checker@v1.2.1
         with:
           base-image: ${{ env.BASE_IMAGE }}
           image:  ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
