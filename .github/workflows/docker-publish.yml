@@ -58,7 +58,8 @@ jobs:
         uses: lucacome/docker-image-update-checker@v1.1.0
         with:
           base-image: ${{ env.BASE_IMAGE }}
-          image:  ${{ github.repository }} # update for your image
+          image:  ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
