@@ -20,7 +20,7 @@ env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
   REGISTRY_DOCKER: docker.io
-  BASE_IMAGE: "python:3.11-slim"
+  BASE_IMAGE: "library/python:3.11-slim"
 
 jobs:
   build:
