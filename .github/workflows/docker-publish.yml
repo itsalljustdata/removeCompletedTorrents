@@ -12,14 +12,18 @@ name: Publish Docker image
 on:
   release:
     types: [published]
+  schedule:
+    - cron: "23 13 3 * *"
+  workflow_dispatch:
 
 env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
   REGISTRY_DOCKER: docker.io
+  BASE_IMAGE: python:3.11-slim
 
 jobs:
-  push_to_registry:
+  build:
 
     name: Build and push Docker image to Registry
     runs-on: ubuntu-latest
@@ -49,17 +53,26 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v3.5.2
 
+      - name: Docker Image Update Checker
+        id: baseupdatecheck
+        uses: lucacome/docker-image-update-checker@v1.1.0
+        with:
+          base-image: ${{ env.BASE_IMAGE }}
+          image:  ${{ github.repository }} # update for your image
+          
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
       - name: Install cosign
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' and steps.baseupdatecheck.outputs.needs-updating == 'true'
         uses: sigstore/cosign-installer@v3.1.1
 
       - name: Check cosign Install
+        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
         run: cosign version
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2.5.0
+        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
 
       - name: Log in to Docker Hub
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
@@ -70,6 +83,7 @@ jobs:
           
       - name: Log in to the Container registry
         uses: docker/login-action@v2.1.0
+        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -78,31 +92,15 @@ jobs:
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v4.4.0
+        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
         with:
           images: |
             ${{ env.REGISTRY_DOCKER }}/${{ env.IMAGE_NAME }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      # - name: Build for test
-      #   id: build-for-test
-      #   uses: docker/build-push-action@v4
-      #   with:
-      #       load: true
-      #       tags: ${{ env.TEST_TAG }}
-      #       labels: ${{ steps.meta.outputs.labels }}
-      #       cache-from: type=gha
-      #       cache-to: type=gha,mode=max
-
-      # - name: Test Image
-      #   run: |
-      #      containerName=${{ github.repository_owner }}
-      #      docker run --name ${containerName} -d ${{ env.TEST_TAG }}
-      #      sleep 5
-      #      docker logs -t ${containerName}
-      #      docker rm -f ${containerName}
-
       - name: Build and Push
         id: build-and-push
+        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
         uses: docker/build-push-action@v4
         with:
           platforms: linux/amd64,linux/arm64,linux/arm/v7
@@ -114,6 +112,7 @@ jobs:
           outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=${{ github.ref }}
 
       - name: Update repo description
+        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
         uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -121,6 +120,7 @@ jobs:
           repository: ${{ env.IMAGE_NAME }}
           
       - name: Sign the images with GitHub OIDC Token
+        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
         env:
             TAGS: ${{ steps.meta.outputs.tags }}
             DIGEST: ${{ steps.build-and-push.outputs.digest }}
