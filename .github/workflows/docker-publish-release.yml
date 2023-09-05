@@ -9,6 +9,6 @@ on:
 
 jobs:
   call-publish:
-    uses: ${{ github.repository }}/.github/workflows/docker-publish.yml
+    uses: ${{ github.repository }}/.github/workflows/docker-publish.yml@main
 
     
