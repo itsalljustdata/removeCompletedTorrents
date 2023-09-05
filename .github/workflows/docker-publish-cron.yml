@@ -55,6 +55,7 @@ jobs:
   do-publish:
     needs: check-base
     uses: ./.github/workflows/docker-publish.yml
+    if: needs.check-base.outputs.publish != 'badger'
     with:
       image-name: ${{ github.repository }}
-    if: needs.check-base.outputs.publish != 'badger'
+    secrets: inherit
