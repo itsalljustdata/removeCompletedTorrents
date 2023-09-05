@@ -25,25 +25,6 @@ jobs:
       - run: |
             echo "github.repository : ${{ github.repository }}"
 
-      - name: Ensure that the image name is suitable for a docker image name
-        id: IMAGE_NAME
-        uses: ASzc/change-string-case-action@v5
-        with:
-          string: ${{ github.repository }}
-
-      - name: assign back to env
-        run: |
-           echo "::group::Env"
-           echo IMAGE_NAME=${{ steps.IMAGE_NAME.outputs.lowercase }} >> $GITHUB_ENV
-           echo "----------------------------------------------"
-           echo $GITHUB_ENV 
-           cat $GITHUB_ENV
-           echo "----------------------------------------------"
-           echo "::endgroup::"
-           
-    #   - name: Check out the repo
-    #     uses: actions/checkout@v3.5.2
-
       - name: Docker Image Update Checker
         id: baseupdatecheck
         uses: lucacome/docker-image-update-checker@v1.2.1
@@ -57,10 +38,9 @@ jobs:
             echo "::group::Log"
             echo "github.repository : ${{ github.repository }}"
             echo "Needs Updating : ${{ steps.baseupdatecheck.outputs.needs-updating }}"
-            echo "${{ steps.baseupdatecheck.output }}"
+            echo "toJSON(${{ steps.baseupdatecheck.output }})"
+            echo "publish=${{ steps.baseupdatecheck.outputs.needs-updating }}" >> $GITHUB_OUTPUT
             echo "::endgroup::"
-      - id: set-update
-        run: echo "publish=${{ steps.baseupdatecheck.outputs.needs-updating }}" >> $GITHUB_OUTPUT
 
   do-publish:
     needs: check-base
@@ -69,6 +49,6 @@ jobs:
     with:
       image-name: ${{ github.repository }}
     # secrets: inherit
-    if: needs.check-base.outputs.publish == 'true'
+    if: needs.check-base.outputs.publish == 'false'
     secrets:
       inherit
