@@ -19,8 +19,6 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    outputs:
-      publish: ${{ steps.baseupdatecheck.outputs.needs-updating }}
 
     steps:
 
@@ -41,7 +39,7 @@ jobs:
             echo "github.repository : ${{ github.repository }}"
             echo "Needs Updating : ${{ steps.baseupdatecheck.outputs.needs-updating }}"
             echo "toJSON(${{ steps.baseupdatecheck.outputs }})"
-            echo "publish=${{ steps.baseupdatecheck.outputs.needs-updating }}" >> $GITHUB_OUTPUT
+            echo "PUBLISH=${{ steps.baseupdatecheck.outputs.needs-updating }} >> $GITHUB_ENV
             echo "::endgroup::"
 
   do-publish:
@@ -49,7 +47,7 @@ jobs:
     needs: check-base
     steps:
       - run: |
-          echo "Publish : ${{ needs.check-base.outputs.publish }}"
+          echo "Publish : ${{ env.PUBLISH }}"
     # uses: ./.github/workflows/docker-publish.yml
     # with:
     #   image-name: ${{ github.repository }}
