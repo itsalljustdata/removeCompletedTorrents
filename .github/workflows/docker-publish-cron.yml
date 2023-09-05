@@ -6,35 +6,24 @@ on:
     - cron: "*/30 * * * *"
   workflow_dispatch:
 
- 
-
 env:
     BASE_IMAGE: "python:3.11-slim"
   
 jobs:
 
-  publish:
-    # uses: ./.github/workflows/docker-publish.yml
-    # permissions:
-    #   contents: read
-    #   packages: write
-    #   id-token: write
-    # secrets: inherit
-
+  base-image-change-publish:
 
     name: Build and push Docker image to Registry
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-      # This is used to complete the identity challenge
-      # with sigstore/fulcio when running outside of PRs.
       id-token: write
 
     steps:
 
-      - run: |
-            echo "github.repository : ${{ github.repository }}"
+    #   - run: |
+    #         echo "github.repository : ${{ github.repository }}"
 
       - name: Ensure that the image name is suitable for a docker image name
         id: IMAGE_NAME
@@ -65,6 +54,12 @@ jobs:
           #,linux/arm/v7
 
       - run: |
-            echo "::group::Needs Updating"
+            echo "::group::Log"
+            echo "github.repository : ${{ github.repository }}"
             echo "Needs Updating : ${{ steps.baseupdatecheck.outputs.needs-updating }}"
+            echo "${{ steps.baseupdatecheck.output }}"
             echo "::endgroup::"
+
+      - name: Publish
+        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
+        uses: ./.github/workflows/docker-publish.yml
