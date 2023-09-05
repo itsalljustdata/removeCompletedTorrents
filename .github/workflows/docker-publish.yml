@@ -20,8 +20,6 @@ on:
         required: true
       DOCKER_PASSWORD:
         required: true
-      GITHUB_TOKEN:
-        required: true
 
 env:
   # Use docker.io for Docker Hub if empty
