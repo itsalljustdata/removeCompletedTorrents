@@ -11,9 +11,9 @@ env:
   
 jobs:
 
-  base-image-change-publish:
+  check-base:
 
-    name: Build and push Docker image to Registry
+    name: Check base image
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -22,8 +22,8 @@ jobs:
 
     steps:
 
-    #   - run: |
-    #         echo "github.repository : ${{ github.repository }}"
+      - run: |
+            echo "github.repository : ${{ github.repository }}"
 
       - name: Ensure that the image name is suitable for a docker image name
         id: IMAGE_NAME
@@ -49,7 +49,7 @@ jobs:
         uses: lucacome/docker-image-update-checker@v1.2.1
         with:
           base-image: ${{ env.BASE_IMAGE }}
-          image:  ${{ env.IMAGE_NAME }}
+          image:  ${{ github.repository }}
           platforms: linux/amd64,linux/arm64
           #,linux/arm/v7
 
@@ -59,7 +59,16 @@ jobs:
             echo "Needs Updating : ${{ steps.baseupdatecheck.outputs.needs-updating }}"
             echo "${{ steps.baseupdatecheck.output }}"
             echo "::endgroup::"
+      - id: set-update
+        run: echo "publish=${{ steps.baseupdatecheck.outputs.needs-updating }}" >> $GITHUB_OUTPUT
 
-      - name: Publish
-        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
-        uses: ./.github/workflows/docker-publish.yml
+  do-publish:
+    needs: check-base
+
+    uses: ./.github/workflows/docker-publish.yml
+    with:
+      image-name: ${{ github.repository }}
+    # secrets: inherit
+    if: needs.check-base.outputs.publish == 'true'
+    secrets:
+      inherit
