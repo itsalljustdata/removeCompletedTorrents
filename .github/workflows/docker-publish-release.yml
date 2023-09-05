@@ -1,0 +1,14 @@
+
+name: New Release - Publish Docker image
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+
+jobs:
+  call-publish:
+    uses: ${{ github.repository }}/.github/workflows/docker-publish.yml
+
+    
