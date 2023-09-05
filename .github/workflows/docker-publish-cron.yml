@@ -1,0 +1,64 @@
+
+name: New Release - Publish Docker image
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+ 
+
+env:
+    BASE_IMAGE: "python:3.11-slim"
+  
+jobs:
+
+  publish:
+    # uses: ./.github/workflows/docker-publish.yml
+    # permissions:
+    #   contents: read
+    #   packages: write
+    #   id-token: write
+    # secrets: inherit
+
+
+    name: Build and push Docker image to Registry
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      # This is used to complete the identity challenge
+      # with sigstore/fulcio when running outside of PRs.
+      id-token: write
+
+    steps:
+
+      - name: Ensure that the image name is suitable for a docker image name
+        id: IMAGE_NAME
+        uses: ASzc/change-string-case-action@v5
+        with:
+          string: ${{ github.repository }}
+
+      - name: assign back to env
+        run: |
+           echo IMAGE_NAME=${{ steps.IMAGE_NAME.outputs.lowercase }} >> $GITHUB_ENV
+           echo "----------------------------------------------"
+           echo $GITHUB_ENV 
+           cat $GITHUB_ENV
+           echo "----------------------------------------------"
+
+    #   - name: Check out the repo
+    #     uses: actions/checkout@v3.5.2
+
+      - name: Docker Image Update Checker
+        id: baseupdatecheck
+        uses: lucacome/docker-image-update-checker@v1.2.1
+        with:
+          base-image: ${{ env.BASE_IMAGE }}
+          image:  ${{ env.IMAGE_NAME }}
+          platforms: linux/amd64,linux/arm64
+          #,linux/arm/v7
+
+      - name: echo needs Updating
+        run: |
+            echo "Needs Updating : ${{ steps.baseupdatecheck.outputs.needs-updating }}"

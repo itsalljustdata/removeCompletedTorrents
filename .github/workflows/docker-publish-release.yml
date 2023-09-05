@@ -8,7 +8,7 @@ on:
 
 
 jobs:
-  call-publish:
+  publish:
     uses: ./.github/workflows/docker-publish.yml
     permissions:
       contents: read
