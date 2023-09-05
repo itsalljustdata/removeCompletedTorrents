@@ -1,5 +1,5 @@
 
-name: New Release - Publish Docker image
+name: Changed Base Image - Publish Docker image
 
 on:
   schedule:
