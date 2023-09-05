@@ -10,10 +10,10 @@
 name: Publish Docker image
 
 on:
-  release:
-    types: [published]
-  schedule:
-    - cron: "*/30 * * * *"
+ # release:
+ # types: [published]
+#  schedule:
+ #   - cron: "*/30 * * * *"
   workflow_dispatch:
 
 env:
@@ -53,32 +53,32 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v3.5.2
 
-      - name: Docker Image Update Checker
-        id: baseupdatecheck
-        uses: lucacome/docker-image-update-checker@v1.2.1
-        with:
-          base-image: ${{ env.BASE_IMAGE }}
-          image:  ${{ env.IMAGE_NAME }}
-          platforms: linux/amd64,linux/arm64
-          #,linux/arm/v7
+  #    - name: Docker Image Update Checker
+  #      id: baseupdatecheck
+  #      uses: lucacome/docker-image-update-checker@v1.2.1
+  #      with:
+  #        base-image: ${{ env.BASE_IMAGE }}
+  #        image:  ${{ env.IMAGE_NAME }}
+  #        platforms: linux/amd64,linux/arm64
+  #        #,linux/arm/v7
           
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
       - name: Install cosign
-        if: github.event_name != 'pull_request' && steps.baseupdatecheck.outputs.needs-updating == 'true'
+   #     if: github.event_name != 'pull_request' && steps.baseupdatecheck.outputs.needs-updating == 'true'
         uses: sigstore/cosign-installer@v3.1.1
 
       - name: Check cosign Install
-        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
+   #     if: steps.baseupdatecheck.outputs.needs-updating == 'true'
         run: cosign version
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2.5.0
-        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
+   #     if: steps.baseupdatecheck.outputs.needs-updating == 'true'
 
       - name: Log in to Docker Hub
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
-        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
+    #    if: steps.baseupdatecheck.outputs.needs-updating == 'true'
         with:
           registry: ${{ env.REGISTRY_DOCKER }}
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -86,7 +86,7 @@ jobs:
           
       - name: Log in to the Container registry
         uses: docker/login-action@v2.1.0
-        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
+   #     if: steps.baseupdatecheck.outputs.needs-updating == 'true'
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -95,7 +95,7 @@ jobs:
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v4.4.0
-        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
+    #    if: steps.baseupdatecheck.outputs.needs-updating == 'true'
         with:
           images: |
             ${{ env.REGISTRY_DOCKER }}/${{ env.IMAGE_NAME }}
@@ -103,7 +103,7 @@ jobs:
 
       - name: Build and Push
         id: build-and-push
-        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
+     #   if: steps.baseupdatecheck.outputs.needs-updating == 'true'
         uses: docker/build-push-action@v4
         with:
           platforms: linux/amd64,linux/arm64,linux/arm/v7
@@ -115,7 +115,7 @@ jobs:
           outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=${{ github.ref }}
 
       - name: Update repo description
-        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
+     #   if: steps.baseupdatecheck.outputs.needs-updating == 'true'
         uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -123,7 +123,7 @@ jobs:
           repository: ${{ env.IMAGE_NAME }}
           
       - name: Sign the images with GitHub OIDC Token
-        if: steps.baseupdatecheck.outputs.needs-updating == 'true'
+   #     if: steps.baseupdatecheck.outputs.needs-updating == 'true'
         env:
             TAGS: ${{ steps.meta.outputs.tags }}
             DIGEST: ${{ steps.build-and-push.outputs.digest }}
