@@ -3,7 +3,7 @@ name: Changed Base Image - Publish Docker image
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "0 0,8,16 * * *"
   workflow_dispatch:
 
 env:
@@ -44,6 +44,7 @@ jobs:
             echo "PUBLISH=${{ steps.baseupdatecheck.outputs.needs-updating }}" >> $GITHUB_OUTPUT
 
   do-publish:
+    name: Publish image
     needs: check-base
     uses: ./.github/workflows/docker-publish.yml
     if: needs.check-base.outputs.publish == 'true'
