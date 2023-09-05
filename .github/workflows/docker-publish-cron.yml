@@ -39,7 +39,7 @@ jobs:
             echo "github.repository : ${{ github.repository }}"
             echo "Needs Updating : ${{ steps.baseupdatecheck.outputs.needs-updating }}"
             echo "::endgroup::"
-            echo "PUBLISH=${{ steps.baseupdatecheck.outputs.needs-updating }}"" >> $GITHUB_ENV
+            echo "PUBLISH=${{ steps.baseupdatecheck.outputs.needs-updating }}" >> $GITHUB_ENV
 
   do-publish:
     runs-on: ubuntu-latest
