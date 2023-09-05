@@ -9,4 +9,4 @@ on:
 
 jobs:
   call-publish:
-    uses: ./.github/workflows/docker-publish.yml@main
+    uses: ./.github/workflows/docker-publish.yml
