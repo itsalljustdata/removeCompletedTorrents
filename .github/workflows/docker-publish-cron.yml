@@ -43,19 +43,10 @@ jobs:
             echo "::endgroup::"
             echo "PUBLISH=${{ steps.baseupdatecheck.outputs.needs-updating }}" >> $GITHUB_OUTPUT
 
-  get-publish:
-    runs-on: ubuntu-latest
-    needs: check-base
-    steps:
-      - env:
-          PUBLISH: ${{ needs.check-base.outputs.publish }}
-        run: |
-          echo "Publish : ${{ env.PUBLISH }}"
-
   do-publish:
     needs: check-base
     uses: ./.github/workflows/docker-publish.yml
-    if: needs.check-base.outputs.publish != 'badger'
+    if: needs.check-base.outputs.publish == 'true'
     with:
       image-name: ${{ github.repository }}
     secrets: inherit
