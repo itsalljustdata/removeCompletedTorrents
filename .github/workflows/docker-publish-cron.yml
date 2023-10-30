@@ -3,7 +3,7 @@ name: Changed Base Image - Publish Docker image
 
 on:
   schedule:
-    - cron: "0 0,8,16 * * *"
+    - cron: "0 16 * * *"
   workflow_dispatch:
 
 env:
